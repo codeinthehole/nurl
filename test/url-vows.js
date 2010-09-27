@@ -12,6 +12,13 @@ assert.equalArrays = function(expected, actual) {
     }
     return true;
 };
+var getNumPublicProperties = function(object) {
+    var numPublicProperties = 0;
+    for (property in object) {
+        numPublicProperties += typeof object[property] == "function" ? 0 : 1;
+    }
+    return numPublicProperties;
+}
 
 var urls = require('urls');
 
@@ -36,6 +43,12 @@ vows.describe("URL objects").addBatch({
         },
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com");
+        },
+        'does not reveal "protocol" as a public property': function(url) {
+            assert.isUndefined(url.protocol);
+        },
+        'does not reveal any public properties': function(url) {
+            assert.equal(getNumPublicProperties(url), 0);
         }
     },
     'A URL object created from http://www.google.com/path/to/file?q=testing&nocache': {
@@ -89,10 +102,14 @@ vows.describe("URL objects").addBatch({
         }
     },
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
-        topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache"),
+        topic: urls.createFromString("http://www.example.com/path/to/file?q=testing&nocache"),
         "can have it's protocol changed to https": function(url) {
             url.setProtocol('https');
-            assert.equal(url.toString(), "https://www.google.com/path/to/file?q=testing&nocache");
+            assert.equal(url.toString(), "https://www.example.com/path/to/file?q=testing&nocache");
         },
+        "can have it's hostname changed correctly": function(url) {
+            url.setHostname('test.example.com');
+            assert.equal(url.toString(), "https://test.example.com/path/to/file?q=testing&nocache");
+        }
     }
 }).export(module);

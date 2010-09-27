@@ -1,6 +1,7 @@
 { "name" : "urls"
 , "description" : "Module that provides URL objects that can be manipulated"
 , "version" : "0.0.1"
-, "main" : "urls.js"
+, "main" : "./lib/urls.js"
+, "directories" : { "test": "./test" }
 , "author" : "David Winterbottom <david.winterbottom@gmail.com>"
 }
