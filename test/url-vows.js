@@ -103,13 +103,25 @@ vows.describe("URL objects").addBatch({
     },
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
         topic: urls.createFromString("http://www.example.com/path/to/file?q=testing&nocache"),
-        "can have it's protocol changed to https": function(url) {
-            url.setProtocol('https');
-            assert.equal(url.toString(), "https://www.example.com/path/to/file?q=testing&nocache");
+        "returns a new URL object when changed": function(url) {
+            var newUrl = url.setProtocol('https');
+            assert.notEqual(newUrl, url);
         },
-        "can have it's hostname changed correctly": function(url) {
-            url.setHostname('test.example.com');
-            assert.equal(url.toString(), "https://test.example.com/path/to/file?q=testing&nocache");
-        }
+        "can have its hostname changed correctly": function(url) {
+            var newUrl = url.setHostname('test.example.com');
+            assert.equal(newUrl.toString(), "http://test.example.com/path/to/file?q=testing&nocache");
+        },
+        "can have its subdomain changed correctly": function(url) {
+        	var newUrl = url.setSubdomain(0, 'data');
+            assert.equal(newUrl.toString(), "http://data.example.com/path/to/file?q=testing&nocache");
+        },
+        "can have its pathname changed": function(url) {
+        	var newUrl = url.setPathname("/another/path");
+            assert.equal(newUrl.toString(), "http://www.example.com/another/path?q=testing&nocache");
+        },
+        "can have a single query parameter changed": function(url) {
+        	var newUrl = url.setQueryParam('nocache', 'yes');
+            assert.equal(newUrl.toString(), "http://www.example.com/path/to/file?q=testing&nocache=yes");
+        },
     }
 }).export(module);
