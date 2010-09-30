@@ -49,10 +49,13 @@ vows.describe("URL objects").addBatch({
         },
         'does not reveal any public properties': function(url) {
             assert.equal(getNumPublicProperties(url), 0);
+        },
+        'returns null as its hash': function(url) {
+            assert.isNull(url.getHash());
         }
     },
-    'A URL object created from http://www.google.com/path/to/file?q=testing&nocache': {
-        topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache"),
+    'A URL object created from http://www.google.com/path/to/file?q=testing&nocache#something': {
+        topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache#something"),
         'has protocol "http"': function(url) {
             assert.equal(url.getProtocol(), 'http');
         },
@@ -98,7 +101,7 @@ vows.describe("URL objects").addBatch({
             assert.equalArrays(url.getSubdomain(2), "com");
         },
         'returns itself correctly as a string': function(url) {
-            assert.equal(url.toString(), "http://www.google.com/path/to/file?q=testing&nocache");
+            assert.equal(url.toString(), "http://www.google.com/path/to/file?q=testing&nocache#something");
         }
     },
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
@@ -123,5 +126,30 @@ vows.describe("URL objects").addBatch({
         	var newUrl = url.setQueryParam('nocache', 'yes');
             assert.equal(newUrl.toString(), "http://www.example.com/path/to/file?q=testing&nocache=yes");
         },
+        "correctly escapes query parameters when they are set": function(url) {
+        	var newUrl = url.setQueryParam('nocache', 'yes and no');
+            assert.equal(newUrl.toString(), "http://www.example.com/path/to/file?q=testing&nocache=yes%20and%20no");
+        },
+        "can have individual path segments set": function(url) {
+        	var newUrl = url.setPathSegment(0, 'new-path');
+            assert.equal(newUrl.toString(), "http://www.example.com/new-path/to/file?q=testing&nocache");
+        },
+        "correctly escapes path segments when they are set": function(url) {
+        	var newUrl = url.setPathSegment(0, 'new path');
+            assert.equal(newUrl.toString(), "http://www.example.com/new%20path/to/file?q=testing&nocache");
+        }
+    },
+    'The URL ftp://someuser:somepassword@host.example.com': {
+    	topic: 'ftp://someuser:somepassword@host.example.com',
+    	"can be created by chaining methods together": function(urlString) {
+    		var newUrl = (new urls.Url()).setProtocol('ftp')
+    					                 .setAuth('someuser', 'somepassword')
+    					                 .setHostname('host.example.com');
+    		assert.equal(newUrl.toString(), urlString);
+    	},
+    	"can be created by using the 'createFromString' factory method": function(urlString) {
+    		var newUrl = urls.createFromString(urlString);
+    		assert.equal(newUrl.toString(), urlString);
+    	}
     }
 }).export(module);

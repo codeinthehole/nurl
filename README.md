@@ -33,7 +33,7 @@ Testing
 -------
 All tests are written in the excellent 'vows' library.  To run them, use
     ? cd /path/to/urls
-    ? vows --spec url-rows.js
+    ? vows 
 
 Author
 -----
