@@ -18,7 +18,7 @@ var getNumPublicProperties = function(object) {
         numPublicProperties += typeof object[property] == "function" ? 0 : 1;
     }
     return numPublicProperties;
-}
+};
 
 var urls = require('urls');
 
@@ -102,6 +102,12 @@ vows.describe("URL objects").addBatch({
         },
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com/path/to/file?q=testing&nocache#something");
+        },
+        'returns the correct hash using getHash()': function(url) {
+        	assert.equal(url.getHash(), 'something');
+        },
+        'returns the correct hash using getFragment()': function(url) {
+        	assert.equal(url.getFragment(), 'something');
         }
     },
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
@@ -150,6 +156,37 @@ vows.describe("URL objects").addBatch({
     	"can be created by using the 'createFromString' factory method": function(urlString) {
     		var newUrl = urls.createFromString(urlString);
     		assert.equal(newUrl.toString(), urlString);
+    	}
+    },
+    'Creation patterns': {
+    	topic: null,
+    	'/path/to/somewhere?q=test can be created using chained methods': function(notUsed) {
+    		var testUrl = (new urls.Url()).setPathname('/path/to/somewhere')
+    		 							  .setQueryParam('q', 'test');
+    		assert.equal(testUrl.toString(), '/path/to/somewhere?q=test');
+    	}
+    },
+    'Merging URL objects': {
+    	topic: function() {
+    	    return urls.createFromString('http://www.google.com');
+    	},
+    	'with non-clashing URLs' : {
+    		topic: function(mainUrl) {
+    			var mergeUrl = urls.createFromString('/testing');
+    			return mainUrl.mergeWith(mergeUrl);
+    		},
+    		'includes components from the second URL that are null in the first': function(url) {
+    			assert.equal(url.toString(), 'http://www.google.com/testing');
+    		}
+    	},
+    	'with clashing URLs' : {
+    		topic: function(mainUrl) {
+    			var mergeUrl = urls.createFromString('http://www.example.com/testing?q=boom');
+    			return mainUrl.mergeWith(mergeUrl);
+    		},
+    		'includes only components from the second URL that are null in the first': function(url) {
+    			assert.equal(url.toString(), 'http://www.google.com/testing?q=boom');
+    		}
     	}
     }
 }).export(module);
