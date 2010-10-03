@@ -28,6 +28,9 @@ vows.describe("URL objects").addBatch({
         'has protocol "http"': function(url) {
             assert.equal(url.getProtocol(), 'http');
         },
+        'has scheme "http"': function(url) {
+            assert.equal(url.getScheme(), 'http');
+        },
         'has host "www.google.com"': function(url) {
             assert.equal(url.getHostname(), 'www.google.com');
         },
