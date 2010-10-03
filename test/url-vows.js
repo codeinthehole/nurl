@@ -55,7 +55,10 @@ vows.describe("URL objects").addBatch({
         },
         'returns null as its hash': function(url) {
             assert.isNull(url.getHash());
-        }
+        },
+        'is equal to a URL created from "HTTP://WWW.GOOGLE.COM"': function(url) {
+            assert.equal(urls.createFromString('HTTP://WWW.GOOGLE.COM').toString(), url.toString());
+        },
     },
     'A URL object created from http://www.google.com/path/to/file?q=testing&nocache#something': {
         topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache#something"),
