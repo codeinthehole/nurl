@@ -1,37 +1,22 @@
 var vows = require('vows'),
     assert = require('assert');
 
-// Modify assert to add a view convenience methods
-assert.isNull = function(value) {
-    assert.strictEqual(value, null);
-};
-assert.equalArrays = function(expected, actual) {
-    if (expected.length != actual.length) return false;
-    for (var i=0; i<expected.length; i++) {
-        if (expected[i] != actual[i]) return false;
-    }
-    return true;
-};
-var getNumPublicProperties = function(object) {
-    var numPublicProperties = 0;
-    for (property in object) {
-        numPublicProperties += typeof object[property] == "function" ? 0 : 1;
-    }
-    return numPublicProperties;
-};
-
 var urls = require('urls');
 
+// A list of publicly exposed properties on the URL object - we use these to dynamically
+// define tests
+var properties = ['protocol', 'scheme', 'hostname', 'path', 'search', 'fragment', 'hash'];
+
 vows.describe("URL objects").addBatch({
-    'A URL created from http://www.google.com': {
+    'A URL object created from http://www.google.com': {
         topic: urls.createFromString("http://www.google.com"),
         'has protocol "http"': function(url) {
             assert.equal(url.getProtocol(), 'http');
         },
-        'has scheme "http"': function(url) {
+        'has scheme "http" (alias of protocol)': function(url) {
             assert.equal(url.getScheme(), 'http');
         },
-        'has host "www.google.com"': function(url) {
+        'has hostname "www.google.com"': function(url) {
             assert.equal(url.getHostname(), 'www.google.com');
         },
         'has pathname "/"': function(url) {
@@ -47,18 +32,41 @@ vows.describe("URL objects").addBatch({
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com");
         },
-        'does not reveal "protocol" as a public property': function(url) {
-            assert.isUndefined(url.protocol);
-        },
-        'does not reveal any public properties': function(url) {
-            assert.equal(getNumPublicProperties(url), 0);
-        },
         'returns null as its hash': function(url) {
             assert.isNull(url.getHash());
         },
         'is equal to a URL created from "HTTP://WWW.GOOGLE.COM"': function(url) {
             assert.equal(urls.createFromString('HTTP://WWW.GOOGLE.COM').toString(), url.toString());
         },
+        'exposes protocol as a public property': function(url) {
+            assert.equal(url.protocol, 'http');
+        },
+        'exposes a fixed set of public properties': function(url) {
+            for (property in properties) {
+            }
+        },
+        // Here we use a lambda to dynamically create a sub-context from the list of 
+        // publicly available properties
+        'throws a TypeError when ': (function(){ 
+            var subContext = {};
+            for (key in properties) {
+                var property = properties[key];
+                subContext[property+" is reassigned"] = function(url) {
+                    assert.throws(function(){url[property] = 'something';}, TypeError); 
+                };
+            }
+            return subContext;
+        })(),
+        'has a public property: ': (function(){ 
+            var subContext = {};
+            for (key in properties) {
+                var property = properties[key];
+                subContext[property] = function(url) {
+                    assert.isTrue(typeof url[property] != "undefined");
+                };
+            }
+            return subContext;
+        })()
     },
     'A URL object created from http://www.google.com/path/to/file?q=testing&nocache#something': {
         topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache#something"),
@@ -95,16 +103,16 @@ vows.describe("URL objects").addBatch({
             assert.equal(numKeys, 2);
         },
         'has path segments ["path", "to", "file"]': function(url) {
-            assert.equalArrays(url.getPathSegments(), ['path', 'to', 'file']);
+            assert.deepEqual(url.getPathSegments(), ['path', 'to', 'file']);
         },
         'has second path segment "to"': function(url) {
-            assert.equalArrays(url.getPathSegment(1), "to");
+            assert.equal(url.getPathSegment(1), "to");
         },
         'has subdomains ["www", "google", "com"]': function(url) {
-            assert.equalArrays(url.getSubdomains(), ["www", "google", "com"]);
+            assert.deepEqual(url.getSubdomains(), ["www", "google", "com"]);
         },
         'has top-level domain "com"': function(url) {
-            assert.equalArrays(url.getSubdomain(2), "com");
+            assert.equal(url.getSubdomain(2), "com");
         },
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com/path/to/file?q=testing&nocache#something");
