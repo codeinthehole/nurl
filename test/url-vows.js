@@ -3,47 +3,84 @@ var vows = require('vows'),
 
 var urls = require('urls');
 
-// A list of publicly exposed properties on the URL object - we use these to dynamically
-// define tests
-var properties = ['protocol', 'scheme', 'hostname', 'path', 'search', 'fragment', 'hash'];
+//A list of publicly exposed properties on the URL object - we use these to dynamically
+//define tests
+var properties = ['protocol', 'scheme', 'hostname', 'pathname', 'search', 'fragment', 'hash', 'href'];
+
+// Set up a list of URLs together with their expected properties
+var testUrls = {
+	'http://www.google.com': {
+		'protocol': 'http',
+		'user': null,
+		'password': null,
+		'hostname': 'www.google.com',
+		'pathname': '/',
+		'port': 80,
+		'search': null,
+		'hash': null
+	},
+	'ftp://user:password@host.com': {
+		'protocol': 'ftp',
+		'auth': 'user:password',
+		'hostname': 'host.com'
+	},
+	'mailto:someone@domain.com': {
+		'protocol': 'mailto',
+		'auth': 'someone',
+		'hostname': 'domain.com'
+	}
+};	
+
+// A simple function for dynamically creating property assertions
+var createPropertyAssertion = function(property, value) {
+	return function(url) {
+		assert.equal(url[property], value);
+	};
+};
+
 
 vows.describe("URL objects").addBatch({
+	'A valid URL object can be created from the string ': (function(){ 
+        var subContext = {};
+        for (urlString in testUrls) {
+            subContext["'"+urlString+"'"] = {
+            	topic: urlString,
+            	"without error": function(str) {
+            		assert.doesNotThrow(function(){urls.createFromString(str);}, Error);
+            	}
+            }; 
+        }
+        return subContext;
+    })(),
+    // Verify the properties are accessible as defined in the testUrls object
+    'A URL object created from ': (function(){ 
+        var subContext = {};
+        for (urlString in testUrls) {
+        	var subSubContext = {
+        		topic: urls.createFromString(urlString)
+        	};
+        	for (key in testUrls[urlString]) {
+        		var property = key;
+        		var value = testUrls[urlString][key];
+        		subSubContext['has '+property+' '+value] = createPropertyAssertion(property, value);
+        	}
+            subContext["'"+urlString+"'"] = subSubContext;
+        }
+        return subContext;
+    })(),
     'A URL object created from http://www.google.com': {
         topic: urls.createFromString("http://www.google.com"),
-        'has protocol "http"': function(url) {
-            assert.equal(url.getProtocol(), 'http');
-        },
         'has scheme "http" (alias of protocol)': function(url) {
             assert.equal(url.getScheme(), 'http');
         },
-        'has hostname "www.google.com"': function(url) {
-            assert.equal(url.getHostname(), 'www.google.com');
-        },
-        'has pathname "/"': function(url) {
-            assert.equal(url.getPathname(), '/');
-        },
-        'has an assumed port of 80': function(url) {
-            assert.equal(url.getPort(), 80);
-        },
-        'has no user nor password': function(url) {
-            assert.isNull(url.getUser());
-            assert.isNull(url.getPassword());
-        },
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com");
-        },
-        'returns null as its hash': function(url) {
-            assert.isNull(url.getHash());
         },
         'is equal to a URL created from "HTTP://WWW.GOOGLE.COM"': function(url) {
             assert.equal(urls.createFromString('HTTP://WWW.GOOGLE.COM').toString(), url.toString());
         },
         'exposes protocol as a public property': function(url) {
             assert.equal(url.protocol, 'http');
-        },
-        'exposes a fixed set of public properties': function(url) {
-            for (property in properties) {
-            }
         },
         // Here we use a lambda to dynamically create a sub-context from the list of 
         // publicly available properties
@@ -117,13 +154,25 @@ vows.describe("URL objects").addBatch({
         'returns itself correctly as a string': function(url) {
             assert.equal(url.toString(), "http://www.google.com/path/to/file?q=testing&nocache#something");
         },
+        'getHref() returns full string': function(url) {
+            assert.equal(url.getHref(), "http://www.google.com/path/to/file?q=testing&nocache#something");
+        },
         'returns the correct hash using getHash()': function(url) {
-        	assert.equal(url.getHash(), 'something');
+        	assert.equal(url.getHash(), '#something');
         },
         'returns the correct hash using getFragment()': function(url) {
-        	assert.equal(url.getFragment(), 'something');
+        	assert.equal(url.getFragment(), '#something');
         }
     },
+//    'mailto:someuser@domain.com': {
+//        topic: function() {
+//    		return urls.createFromString(this.context.name);
+//    	},
+//        ' has protocol "mailto"': function(url) {
+//            assert.equal(url.getProtocol(), 'mailto');
+//        }
+//    },
+    // TESTING SETTERS
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
         topic: urls.createFromString("http://www.example.com/path/to/file?q=testing&nocache"),
         "returns a new URL object when changed": function(url) {
@@ -170,6 +219,10 @@ vows.describe("URL objects").addBatch({
     	"can be created by using the 'createFromString' factory method": function(urlString) {
     		var newUrl = urls.createFromString(urlString);
     		assert.equal(newUrl.toString(), urlString);
+    	},
+    	"returns 'someuser:somepassword' from getAuth()": function(urlString) {
+    		var newUrl = urls.createFromString(urlString);
+    		assert.equal('someuser:somepassword', newUrl.getAuth());
     	}
     },
     'Creation patterns': {
