@@ -1,27 +1,18 @@
-URLs - Simple URL objects for node.js
-=====================================
+# URLs - Simple URL objects for node.js
 
-Isn't there already a 'url' module for node.js?
------------------------------------------------
-True, but it is relatively simple: offering a few methods for parsing and formatting
-URLs.  This module complements that functionality by providing a simple URL object that can be interrogated and
-manipulated.  
+This module provides a simple URL object that provides a clean, easy-to-use interface to 
+accessing a URLs values as well as for creating and manipulating URLs.  Each URL object is
+immutable: whenever a value is altered, a new instance is returned leaving the original unchanged.
 
-What's good about this URL object?
-----------------------------------
-All URL objects are immutable and offer a clean, intention-revealing API
-that makes them easy to work with.  Each URL exposes it's properties through both getter methods
-(e.g. getProtocol) and public properties (defined using __defineGetter__).  When a property is altered
-on a URL object, a new instance is returned.
+This module builds on top of the core 'url' and 'querystring' modules.
 
-Sample usage
-------------
-Creation:
+## Sample usage
+### Creation:
 
     var urls = require('urls');
 
 	// Create from string
-	var myUrl = urls.createFromString("http://www.example.com/path/to/here?q=test");
+	var myUrl = urls.parse("http://www.example.com/path/to/here?q=test");
 
 	// Create using chained methods
 	var anotherUrl = (new urls.Url()).setProtocol('https')
@@ -39,7 +30,7 @@ Creation:
     var url3 = url1.mergeWith(url2);
 	url3.toString(); // 'http://www.example.com/path#frag'
 
-Interrogation:
+### Interrogation:
 
 	// Public properties
 	myUrl['protocol']; // 'http';
@@ -51,12 +42,73 @@ Interrogation:
 	myUrl.getSubdomain(0); // 'www'
 	myUrl.getQueryParam('q'); // 'test'
 	
-Testing
--------
-All tests are written in the excellent 'vows' library.  To run them, use
-    ? cd /path/to/urls
-    ? vows --spec
+## API
 
-Author
------
+Starting with:
+
+    var urls = require('urls');
+    var u = urls.parse('http://www.google.com/search?q=node.js#top');
+
+then the various components of `u` can be accessed through properties:
+
+- `u.protocol`, `u.scheme`
+- `u.auth`
+- `u.hostname`
+- `u.port`
+- `u.pathname`
+- `u.search`
+- `u.fragment`, `u.hash`
+- `u.href`
+
+and getters:
+
+- `u.getProtocol()`, `u.getScheme()`
+- `u.getUser()`
+- `u.getPassword()`
+- `u.getHostname()`
+- `u.getPort()`
+- `u.getPathname()`
+- `u.getSearch()`
+- `u.getHash()`, `u.getFragment()`
+- `u.getHref()`, `u.toString()`
+
+Note that these return `Null` when the component has no value.
+
+More detailed interrogation can be performed using:
+
+- `u.getSubdomain(0)`
+- `u.getSubdomains()`
+- `u.hasQueryParam('q')`
+- `u.getQueryParam('q')`
+- `u.getPathSegments()`
+- `u.getPathSegment(0)`
+- `u.isRelative()`
+- `u.isAbsolute()`
+
+Setters follow a similar pattern, each returning a new URL object:
+
+- `u.setProtocol('https')`, `u.setScheme('https')`
+- `u.setAuth('user', 'secret')`
+- `u.setHostname('example.com')`
+- `u.setPort('80')`
+- `u.setPathname('/')`
+- `u.setQueryParam('q', 'testing)`
+- `u.setHash('top')`
+
+These can be chained together to create a URL in a fluent, readable manner:
+
+    var v = (new urls.Url()).setProtocol('http')
+                            .setHostname('example.com')
+                            .setQueryParam('q', 'node.js');
+
+	
+	
+## Testing
+
+All tests are written in the excellent 'vows' library.  To run them, use
+    $ cd /path/to/urls
+    $ vows --spec
+
+## Author
+
 David Winterbottom (david.winterbottom@gmail.com)
