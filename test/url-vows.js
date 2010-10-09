@@ -1,16 +1,16 @@
 var vows = require('vows'),
-    assert = require('assert');
+    assert = require('assert')
+    urls = require('urls');
 
-var urls = require('urls');
-
-//A list of publicly exposed properties on the URL object - we use these to dynamically
-//define tests
+// A list of publicly exposed properties on the URL object - we use these to dynamically
+// define tests
 var properties = ['protocol', 'scheme', 'hostname', 'pathname', 'search', 'fragment', 'hash', 'href'];
 
 // Set up a list of URLs together with their expected properties
 var testUrls = {
 	'http://www.google.com': {
 		'protocol': 'http',
+		'scheme': 'http',
 		'user': null,
 		'password': null,
 		'hostname': 'www.google.com',
@@ -28,6 +28,13 @@ var testUrls = {
 		'protocol': 'mailto',
 		'auth': 'someone',
 		'hostname': 'domain.com'
+	},
+	'file:///path/to/file.txt': {
+		'protocol': 'file',
+		'pathname': '/path/to/file.txt'
+	},
+	'/path/to/resource': {
+		'pathname': '/path/to/resource'
 	}
 };	
 
@@ -37,9 +44,14 @@ var createPropertyAssertion = function(property, value) {
 		assert.equal(url[property], value);
 	};
 };
-
+var createGetterAssertion = function(getterName, value) {
+	return function(url) {
+		assert.equal(url[getterName](), value);
+	};
+};
 
 vows.describe("URL objects").addBatch({
+	// Check that URLs can be constructed without error
 	'A valid URL object can be created from the string ': (function(){ 
         var subContext = {};
         for (urlString in testUrls) {
@@ -52,38 +64,38 @@ vows.describe("URL objects").addBatch({
         }
         return subContext;
     })(),
-    // Verify the properties are accessible as defined in the testUrls object
+    // Verify the properties are accessible as defined in the testUrls object above
     'A URL object created from ': (function(){ 
         var subContext = {};
         for (urlString in testUrls) {
         	var subSubContext = {
         		topic: urls.createFromString(urlString)
         	};
+        	// Create test for properties
         	for (key in testUrls[urlString]) {
         		var property = key;
         		var value = testUrls[urlString][key];
-        		subSubContext['has '+property+' '+value] = createPropertyAssertion(property, value);
+        		subSubContext["has public property '"+property+"' = '"+value+"'"] = createPropertyAssertion(property, value);
         	}
+        	subSubContext['returns itself correctly as a string'] = createGetterAssertion('toString', urlString); 
             subContext["'"+urlString+"'"] = subSubContext;
         }
         return subContext;
     })(),
+    // Testing the other getter methods not tested using automated context generators and various other behaviours
     'A URL object created from http://www.google.com': {
         topic: urls.createFromString("http://www.google.com"),
-        'has scheme "http" (alias of protocol)': function(url) {
-            assert.equal(url.getScheme(), 'http');
+        'is absolute': function(url) {
+            assert.isTrue(url.isAbsolute());
         },
-        'returns itself correctly as a string': function(url) {
-            assert.equal(url.toString(), "http://www.google.com");
+        'is not relative': function(url) {
+            assert.isFalse(url.isRelative());
         },
         'is equal to a URL created from "HTTP://WWW.GOOGLE.COM"': function(url) {
             assert.equal(urls.createFromString('HTTP://WWW.GOOGLE.COM').toString(), url.toString());
         },
-        'exposes protocol as a public property': function(url) {
-            assert.equal(url.protocol, 'http');
-        },
         // Here we use a lambda to dynamically create a sub-context from the list of 
-        // publicly available properties
+        // publicly available properties.  This is verifying that all properties are read-only.
         'throws a TypeError when ': (function(){ 
             var subContext = {};
             for (key in properties) {
@@ -98,17 +110,21 @@ vows.describe("URL objects").addBatch({
             var subContext = {};
             for (key in properties) {
                 var property = properties[key];
-                subContext[property] = function(url) {
+                subContext["'"+property+"'"] = function(url) {
                     assert.isTrue(typeof url[property] != "undefined");
                 };
             }
             return subContext;
         })()
     },
+    // Testing getter methods
     'A URL object created from http://www.google.com/path/to/file?q=testing&nocache#something': {
         topic: urls.createFromString("http://www.google.com/path/to/file?q=testing&nocache#something"),
         'has protocol "http"': function(url) {
             assert.equal(url.getProtocol(), 'http');
+        },
+        'has scheme "http"': function(url) {
+            assert.equal(url.getScheme(), 'http');
         },
         'has host "www.google.com"': function(url) {
             assert.equal(url.getHostname(), 'www.google.com');
@@ -164,20 +180,20 @@ vows.describe("URL objects").addBatch({
         	assert.equal(url.getFragment(), '#something');
         }
     },
-//    'mailto:someuser@domain.com': {
-//        topic: function() {
-//    		return urls.createFromString(this.context.name);
-//    	},
-//        ' has protocol "mailto"': function(url) {
-//            assert.equal(url.getProtocol(), 'mailto');
-//        }
-//    },
     // TESTING SETTERS
     'A URL object created from http://www.example.com/path/to/file?q=testing&nocache': {
         topic: urls.createFromString("http://www.example.com/path/to/file?q=testing&nocache"),
         "returns a new URL object when changed": function(url) {
             var newUrl = url.setProtocol('https');
             assert.notEqual(newUrl, url);
+        },
+        "can have its protocol changed using setProtocol()": function(url) {
+            var newUrl = url.setProtocol('https');
+            assert.equal(newUrl.toString(), "https://www.example.com/path/to/file?q=testing&nocache");
+        },
+        "can have its scheme changed using setScheme()": function(url) {
+            var newUrl = url.setProtocol('https');
+            assert.equal(newUrl.toString(), "https://www.example.com/path/to/file?q=testing&nocache");
         },
         "can have its hostname changed correctly": function(url) {
             var newUrl = url.setHostname('test.example.com');
@@ -199,9 +215,16 @@ vows.describe("URL objects").addBatch({
         	var newUrl = url.setQueryParam('nocache', 'yes and no');
             assert.equal(newUrl.toString(), "http://www.example.com/path/to/file?q=testing&nocache=yes%20and%20no");
         },
-        "can have individual path segments set": function(url) {
+        "can have individual path segments replaced": function(url) {
         	var newUrl = url.setPathSegment(0, 'new-path');
             assert.equal(newUrl.toString(), "http://www.example.com/new-path/to/file?q=testing&nocache");
+        },
+        "can have new path segments set": function(url) {
+        	var newUrl = url.setPathSegment(3, 'new-path');
+            assert.equal(newUrl.toString(), "http://www.example.com/path/to/file/new-path?q=testing&nocache");
+        },
+        "throws an error when an out of range path segment is set": function(url) {
+        	assert.throws(function(){url.setPathSegment(4, 'something');}, Error);
         },
         "correctly escapes path segments when they are set": function(url) {
         	var newUrl = url.setPathSegment(0, 'new path');
@@ -220,17 +243,17 @@ vows.describe("URL objects").addBatch({
     		var newUrl = urls.createFromString(urlString);
     		assert.equal(newUrl.toString(), urlString);
     	},
-    	"returns 'someuser:somepassword' from getAuth()": function(urlString) {
-    		var newUrl = urls.createFromString(urlString);
-    		assert.equal('someuser:somepassword', newUrl.getAuth());
+    	"can be created by using the 'parse' factory method": function(urlString) {
+    		var newUrl = urls.parse(urlString);
+    		assert.equal(newUrl.toString(), urlString);
     	}
     },
-    'Creation patterns': {
-    	topic: null,
-    	'/path/to/somewhere?q=test can be created using chained methods': function(notUsed) {
-    		var testUrl = (new urls.Url()).setPathname('/path/to/somewhere')
-    		 							  .setQueryParam('q', 'test');
-    		assert.equal(testUrl.toString(), '/path/to/somewhere?q=test');
+    'A relative URL /path/to/somewhere?q=test': {
+    	topic: '/path/to/somewhere?q=test',
+    	"can be created by chaining methods together": function(urlString) {
+    		var newUrl = (new urls.Url()).setPathname('/path/to/somewhere')
+			                             .setQueryParam('q', 'test');
+    		assert.equal(newUrl.toString(), urlString);
     	}
     },
     'Merging URL objects': {
