@@ -1,4 +1,4 @@
-# URLs - Simple URL objects for node.js
+# nURL - A simple URL object for node.js
 
 This module provides a simple URL object that provides a clean, easy-to-use interface to 
 accessing a URLs values as well as for creating and manipulating URLs.  Each URL object is
@@ -12,21 +12,21 @@ URLs are modelled as:
 
     scheme://user:password@hostname:port/pathname?search#fragment
 
-Note that the '//' following the scheme is optional for certain schema (eg mailto).	
+Note that the `//` following the scheme is optional for certain schema (eg mailto).	
 
 Now, starting with:
 
-    var urls = require('urls');
+    var nurl = require('nurl');
 
 you can create a URL object using one of:
 
-    var u = urls.parse('http://www.google.com/search?q=node.js#top');
-    var u = (new urls.Url()).setScheme('http')
+    var u = nurls.parse('http://www.google.com/search?q=node.js#top');
+    var u = (new nurl.Url()).setScheme('http')
 						    .setHostname('www.google.com')
 							.setPathname('/search')
 							.setQueryParam('q', 'node.js')
 							.setFragment('top');
-	var u = new urls.Url('http', Null, Null, 'www.google.com', Null, '/search', 'q=node.js', 'top');
+	var u = new nurl.Url('http', Null, Null, 'www.google.com', Null, '/search', 'q=node.js', 'top');
 
 The various components of `u` can be accessed through both read-only properties and getter methods:
 
@@ -73,8 +73,8 @@ Setters follow a similar pattern, each returning a new URL object:
 URL objects can be merged to create a new object - the properties of the passed in
 URL will fill in any missing components:
 
-    var u1 = urls.parse('http://www.google.com');
-	var u2 = urls.parse('/search?q=test.js');
+    var u1 = nurl.parse('http://www.google.com');
+	var u2 = nurl.parse('/search?q=test.js');
 	u1.mergeWith(u2) // => 'http://www.google.com/search?q=test.js'
 
 	
@@ -82,7 +82,7 @@ URL will fill in any missing components:
 
 All tests are written in the excellent [vows](http://vowsjs.org/) library.  To run them, use
 
-    $ cd /path/to/urls
+    $ cd /path/to/nurl
     $ vows --spec
 
 ## Author
