@@ -1,7 +1,7 @@
-{ "name" : "urls"
-, "description" : "Module that provides URL objects that can be manipulated"
+{ "name" : "nurl"
+, "description" : "Module that provides a simple, immutable URL object for access and manipulation"
 , "version" : "0.0.1"
-, "main" : "./lib/urls.js"
+, "main" : "./lib/nurl.js"
 , "directories" : { "test": "./test" }
 , "author" : "David Winterbottom <david.winterbottom@gmail.com>"
 }

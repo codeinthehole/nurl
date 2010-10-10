@@ -1,6 +1,6 @@
 var vows = require('vows'),
     assert = require('assert')
-    urls = require('urls');
+    urls = require('nurl');
 
 // A list of publicly exposed properties on the URL object - we use these to dynamically
 // define tests
@@ -14,7 +14,7 @@ var testUrls = {
 		'user': null,
 		'password': null,
 		'hostname': 'www.google.com',
-		'pathname': '/',
+
 		'port': 80,
 		'search': null,
 		'hash': null

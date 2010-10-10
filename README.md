@@ -7,105 +7,81 @@ immutable: whenever a value is altered, a new instance is returned leaving the o
 This module builds on top of the core 'url' and 'querystring' modules.
 
 ## Sample usage
-### Creation:
-
-    var urls = require('urls');
-
-	// Create from string
-	var myUrl = urls.parse("http://www.example.com/path/to/here?q=test");
-
-	// Create using chained methods
-	var anotherUrl = (new urls.Url()).setProtocol('https')
-							         .setHostname('www.google.com')
-									 .setQueryParam('q', 'node.js');
-
-	// Create by mutating an existing URL
-	var modifiedUrl = myUrl.setQueryParam('q', 'javascript');
-	anotherUrl.toString(); // 'http://www.google.com/q=javascript'
-	anotherUrl == modifiedUrl; // false
-
-	// Create by merging two existing URLs 
-    var url1 = urls.createFromString("http://www.example.com");
-    var url2 = urls.createFromString("/path/#frag");
-    var url3 = url1.mergeWith(url2);
-	url3.toString(); // 'http://www.example.com/path#frag'
-
-### Interrogation:
-
-	// Public properties
-	myUrl['protocol']; // 'http';
-	myUrl['hostname']; // 'www.example.com';
-
-	// Getter methods
-	myUrl.getProtocol(); // 'http'
-	myUrl.getHostname(); // 'www.example.com'
-	myUrl.getSubdomain(0); // 'www'
-	myUrl.getQueryParam('q'); // 'test'
 	
-## API
+URLs are modelled as:
 
-Starting with:
+    scheme://user:password@hostname:port/pathname?search#fragment
+
+Note that the '//' following the scheme is optional for certain schema (eg mailto).	
+
+Now, starting with:
 
     var urls = require('urls');
+
+you can create a URL object using one of:
+
     var u = urls.parse('http://www.google.com/search?q=node.js#top');
+    var u = (new urls.Url()).setScheme('http')
+						    .setHostname('www.google.com')
+							.setPathname('/search')
+							.setQueryParam('q', 'node.js')
+							.setFragment('top');
+	var u = new urls.Url('http', Null, Null, 'www.google.com', Null, '/search', 'q=node.js', 'top');
 
-then the various components of `u` can be accessed through properties:
+The various components of `u` can be accessed through both read-only properties and getter methods:
 
-- `u.protocol`, `u.scheme`
-- `u.auth`
-- `u.hostname`
-- `u.port`
-- `u.pathname`
-- `u.search`
-- `u.fragment`, `u.hash`
-- `u.href`
+    u.protocol, u.scheme, u.getProtocol(), u.getScheme() // => 'http'
+	u.getUser() // => Null
+	u.getPassword() // => Null
+    u.auth, u.getAuth() // => Null
+    u.hostname, u.getHostname() // => 'www.google.com'
+    u.port, u.getPort() // => 80
+    u.pathname, u.getPathname() // => '/search'
+    u.search, u.getSearch() // => '?node.js'
+    u.fragment, u.hash, u.getFragment(), u.getHash() // => 'top'
+    u.href, u.getHref() // => 'http://www.google.com/search?q=node.js#top'
 
-and getters:
+Note that:
 
-- `u.getProtocol()`, `u.getScheme()`
-- `u.getUser()`
-- `u.getPassword()`
-- `u.getHostname()`
-- `u.getPort()`
-- `u.getPathname()`
-- `u.getSearch()`
-- `u.getHash()`, `u.getFragment()`
-- `u.getHref()`, `u.toString()`
-
-Note that these return `Null` when the component has no value.
+- both the properties and getters return `Null` when the component has no value.
+w
+- some property names are aliases (such as 'protocol' and 'scheme')
 
 More detailed interrogation can be performed using:
 
-- `u.getSubdomain(0)`
-- `u.getSubdomains()`
-- `u.hasQueryParam('q')`
-- `u.getQueryParam('q')`
-- `u.getPathSegments()`
-- `u.getPathSegment(0)`
-- `u.isRelative()`
-- `u.isAbsolute()`
+    u.getSubdomains() // => ['www', 'google', 'com']
+    u.getSubdomain(0) // => 'www'
+    u.hasQueryParam('q') // => True
+    u.getQueryParam('q') // => 'node.js'
+    u.getPathSegments() // => ['search']
+    u.getPathSegment(0) // => 'search'
+    u.isRelative() // => False
+    u.isAbsolute() // => True
 
 Setters follow a similar pattern, each returning a new URL object:
 
-- `u.setProtocol('https')`, `u.setScheme('https')`
-- `u.setAuth('user', 'secret')`
-- `u.setHostname('example.com')`
-- `u.setPort('80')`
-- `u.setPathname('/')`
-- `u.setQueryParam('q', 'testing)`
-- `u.setHash('top')`
+    u.setProtocol('https'), u.setScheme('https')
+    u.setAuth('user', 'secret')
+    u.setHostname('example.com')
+    u.setSubdomain(0, 'sample') // => 'sample.google.com'
+    u.setPort('80')
+    u.setPathname('/')
+    u.setPathSegment(1, 'extension') // => '/search/extension'
+    u.setQueryParam('q', 'testing')
+    u.setHash('top')
 
-These can be chained together to create a URL in a fluent, readable manner:
+URL objects can be merged to create a new object - the properties of the passed in
+URL will fill in any missing components:
 
-    var v = (new urls.Url()).setProtocol('http')
-                            .setHostname('example.com')
-                            .setQueryParam('q', 'node.js');
+    var u1 = urls.parse('http://www.google.com');
+	var u2 = urls.parse('/search?q=test.js');
+	u1.mergeWith(u2) // => 'http://www.google.com/search?q=test.js'
 
-	
 	
 ## Testing
 
-All tests are written in the excellent 'vows' library.  To run them, use
+All tests are written in the excellent [vows](http://vowsjs.org/) library.  To run them, use
+
     $ cd /path/to/urls
     $ vows --spec
 
