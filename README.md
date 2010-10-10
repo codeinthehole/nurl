@@ -6,6 +6,12 @@ immutable: whenever a value is altered, a new instance is returned leaving the o
 
 This module builds on top of the core 'url' and 'querystring' modules.
 
+## Installation
+
+Nothing more than:
+
+    npm install nurl
+
 ## Sample usage
 	
 URLs are modelled as:
