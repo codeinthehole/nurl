@@ -1,4 +1,2 @@
-Publish using npm
-
-Route to method (from ruby)
+Route-to method (from ruby)
 Filter API by scheme - ie throw errors when setting query on a file: URL

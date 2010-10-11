@@ -248,6 +248,25 @@ vows.describe("URL objects").addBatch({
     		assert.equal(newUrl.toString(), urlString);
     	}
     },
+    'The URL /search': {
+    	topic: '/search',
+    	"can be created by chaining methods together": function(urlString) {
+    		var newUrl = (new urls.Url()).setPathname('search');
+    		assert.equal(newUrl.toString(), urlString);
+    	}
+    },
+    'The URL /search/here%20i%20am': {
+    	topic: '/search/here%20i%20am',
+    	"can be created by chaining methods together": function(urlString) {
+    		var newUrl = (new urls.Url()).setPathname('search')
+    								     .setPathSegment(1, 'here i am');
+    		assert.equal(newUrl.toString(), urlString);
+    	},
+    	"can be created by using setPathSegments()": function(urlString) {
+    		var newUrl = (new urls.Url()).setPathSegments(['search', 'here i am']);
+    		assert.equal(newUrl.toString(), urlString);
+    	}
+    },
     'A relative URL /path/to/somewhere?q=test': {
     	topic: '/path/to/somewhere?q=test',
     	"can be created by chaining methods together": function(urlString) {

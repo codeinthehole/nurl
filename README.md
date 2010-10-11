@@ -73,6 +73,7 @@ Setters follow a similar pattern, each returning a new URL object:
     u.setPort('80')
     u.setPathname('/')
     u.setPathSegment(1, 'extension') // => '/search/extension'
+    u.setPathSegments(['search', 'some query here'])
     u.setQueryParam('q', 'testing')
     u.setHash('top')
 
